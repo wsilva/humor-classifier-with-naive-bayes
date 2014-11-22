@@ -3,7 +3,7 @@
 import re
 import sys
 
-def readFileToLists(csvfile='Sentiment Analysis Dataset.csv'):
+def readFileToLists(csvfile='../Sentiment Analysis Dataset.csv'):
 
     try:
         arq = open(csvfile, 'r')
@@ -38,20 +38,25 @@ def readFileToLists(csvfile='Sentiment Analysis Dataset.csv'):
 
 def setupVocabulary(twittes):
     vocabulary = {}
+
     for twit in twittes:
         words = twit[2].split()
+        humor = twit[1]
         for w in words:
-            if vocabulary[w]:
-                vocabulary[w]+=1
-            else:
-                vocabulary[w]=0
+            if w not in vocabulary:
+                # print "Adicionando %s ao dicionario" % (w)
+                vocabulary[w] = {'0': 0, '1': 0}
+
+            vocabulary[w][humor]+=1
+            # print "Incrementando o contador para %s com humor %s (%s)" % (w, humor, vocabulary[w][humor])
+
     return vocabulary
 
 def main():
     print "Lendo arquivo para a memória..."
     twittes = readFileToLists()
     vocabulary = setupVocabulary(twittes)
-    print vocabulary
+    print "Vocabulário montado"
     print "Fim"
 
 if __name__ == '__main__':
