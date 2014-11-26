@@ -6,6 +6,7 @@ import sys
 import random
 import NaiveBayesWordClassifier
 
+# holdout
 def separateTrainAndTestGroups(csvfile='Sentiment Analysis Dataset.csv', testSetPercentSize=0.3):
     
     try:
@@ -88,42 +89,43 @@ def main():
     print "Embaralhando dados e separando em conjuntos de treinamento (trainSetFile.csv) e teste (testSetFile.csv)..."
     separateTrainAndTestGroups("../Sentiment Analysis Dataset.csv", 0.3)
     print "Concluído"
-    print "..."
+    print ""
 
     print "Lendo o arquivo de treino (trainSetFile.csv) para memória, limpando e preparando..."
     listOfDocuments = readFileToLists("trainSetFile.csv")
     print "Concluído"
-    print "..."
+    print ""
 
-    print "Criando e treinando o Naive Bayes com o arquivo de treinamento..."
+    print "Criando e treinando o Naive Bayes com o arquivo de treinamento (testSetFile.csv)..."
     nb = NaiveBayesWordClassifier.NaiveBayesWordClassifier()
     nb.train(listOfDocuments)
+    print "Concluído"
+    print ""
+
+    print "Resultados do treinamento:"
     print "|V| = %s (vocabulário)" % (nb.vocabulary)
-    print "Prioris: P(pos) = %s" % (float(nb.qtdeDocument['1']) / float(nb.totalDocuments))
-    print "         P(neg) = %s" % (float(nb.qtdeDocument['0']) / float(nb.totalDocuments))
+    print "Prioris: P(pos) = %.5f" % (float(nb.qtdeDocument['1']) / float(nb.totalDocuments))
+    print "         P(neg) = %.5f" % (float(nb.qtdeDocument['0']) / float(nb.totalDocuments))
     print "ni (número total da frequência de palavras de cada classe):"
     print "     n[pos] = %s" % (nb.freq['1'])
     print "     n[neg] = %s" % (nb.freq['0'])
-    print "P(wi | ci) - Probabilidade condicional de uma palavra dada uma classe."
+    print "P(wi|ci) - Probabilidade condicional de cada palaavra dada uma classe."
+    print "Limitando quantidade de exemplos em 5"
     cont=0
     for word, prob in nb.probability.iteritems():
         cont+=1
         if cont < 6:
-            print "    P(%s|pos) = %s" % (word, prob['1']) 
-            print "    P(%s|neg) = %s" % (word, prob['0'])
-
-    print "Limitando quantidade de exemplos em 5 (usando laplace para evitar frequência zerada)"
-    print "Concluído"
-    print "..."
+            print "    P(%s|pos) = %.10f" % (word, prob['1']) 
+            print "    P(%s|neg) = %.10f" % (word, prob['0'])
+    print ""
 
     print "Lendo o arquivo de teste (testSetFile.csv) para memória, limpando e preparando..."
     listOfDocuments = readFileToLists("testSetFile.csv")
     print "Concluído"
-    print "..."
+    print ""
 
-    print "Testando cada documento lido..."
+    print "Testando cada documento do arquivo de teste e contabilizando acertos..."
     hits = 0 #contador de acertos
-    
     for doc in listOfDocuments:
 
         # attributes from the list
@@ -135,13 +137,16 @@ def main():
         # counting the right hits
         if sentiment==identifiedClass:
             hits+=1
+    print "Concluído"
+    print ""
 
+    print "Resultados do teste:"
     print "%s acertos em %s documentos" % (hits, len(listOfDocuments))
     print "%.2f %% de acertos" % (100 * float(hits)/float(len(listOfDocuments)))
 
-    print "..."
-    print "..."
+    print ""
     print "Fim"
+    print ""
 
 if __name__ == '__main__':
     main()
