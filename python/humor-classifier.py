@@ -105,12 +105,13 @@ def main():
     print "     n[pos] = %s" % (nb.freq['1'])
     print "     n[neg] = %s" % (nb.freq['0'])
     print "P(wi | ci) - Probabilidade condicional de uma palavra dada uma classe."
-    cont=1
-    for key,value in nb.word.iteritems():
+    cont=0
+    for word, prob in nb.probability.iteritems():
         cont+=1
-        if cont < 7:
-            print "    P(%s|pos) = %s" % (key, (1 + float(value['1'])) / (nb.vocabulary + float(nb.freq['1']))) # with laplace
-            print "    P(%s|neg) = %s" % (key, (1 + float(value['0'])) / (nb.vocabulary + float(nb.freq['0']))) # with laplace
+        if cont < 6:
+            print "    P(%s|pos) = %s" % (word, prob['1']) 
+            print "    P(%s|neg) = %s" % (word, prob['0'])
+
     print "Limitando quantidade de exemplos em 5 (usando laplace para evitar frequência zerada)"
     print "Concluído"
     print "..."

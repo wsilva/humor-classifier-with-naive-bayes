@@ -55,18 +55,30 @@ class NaiveBayesWordClassifier(object):
                 # updating frequency of words in each class
                 self.freq[sentiment]+=1
 
+        # calculating probabilities
+        for word,qtde in self.word.iteritems():
+            self.probability[word] = {}
+            self.probability[word]['1'] = (1 + float(qtde['1'])) / (float(self.vocabulary) + float(self.freq['1']))
+            self.probability[word]['0'] = (1 + float(qtde['0'])) / (float(self.vocabulary) + float(self.freq['0']))
+
+
+
     def classificator(self, document):
 
-        # calculating the posteriori
-        probability_pos = float(self.qtdeDocument['1']) / float(self.totalDocuments)
-        probability_neg = float(self.qtdeDocument['0']) / float(self.totalDocuments)
+        # to calculate P(ci|w)
+        probability_pos = math.log(float(self.qtdeDocument['1']) / float(self.totalDocuments))
+        probability_neg = math.log(float(self.qtdeDocument['0']) / float(self.totalDocuments))
 
-        return "1"
+        # getting the words from the current document
+        words = document.split()
 
+        for w in words:
 
-
-
-
-
-
+            # if the word exists in train data we use it to calculate P(ci|w)
+            if w in self.probability:
+                probability_pos += math.log(self.probability[w]['1'])
+                probability_neg += math.log(self.probability[w]['0'])
+        if probability_pos > probability_neg:
+            return "1"
+        return "0"
 
