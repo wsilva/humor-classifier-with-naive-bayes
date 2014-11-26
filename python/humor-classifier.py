@@ -90,7 +90,7 @@ def main():
     print "Concluído"
     print "..."
 
-    print "Lendo o arquivo de treino para memória e preparando..."
+    print "Lendo o arquivo de treino (trainSetFile.csv) para memória, limpando e preparando..."
     listOfDocuments = readFileToLists("trainSetFile.csv")
     print "Concluído"
     print "..."
@@ -115,16 +115,31 @@ def main():
     print "Concluído"
     print "..."
 
-    # print "Montando Vocabulário"
-    # # vocabulary = setupVocabulary(twittes)
-    # print "Concluído"
-    # print "..."
+    print "Lendo o arquivo de teste (testSetFile.csv) para memória, limpando e preparando..."
+    listOfDocuments = readFileToLists("testSetFile.csv")
+    print "Concluído"
+    print "..."
 
-    # print "Calculando prioris"
-    # # prob = getProbabilities(vocabulary)
-    # print "Concluído"
-    # print "..."
+    print "Testando cada documento lido..."
+    hits = 0 #contador de acertos
+    
+    for doc in listOfDocuments:
 
+        # attributes from the list
+        document = doc[0]
+        sentiment = doc[1]
+        tweet = doc[2]
+        identifiedClass = nb.classificator(tweet)
+        
+        # counting the right hits
+        if sentiment==identifiedClass:
+            hits+=1
+
+    print "%s acertos em %s documentos" % (hits, len(listOfDocuments))
+    print "%.2f %% de acertos" % (100 * float(hits)/float(len(listOfDocuments)))
+
+    print "..."
+    print "..."
     print "Fim"
 
 if __name__ == '__main__':
