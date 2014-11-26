@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import math
+
 class NaiveBayesWordClassifier(object):
 
     def __init__(self):
@@ -53,8 +55,13 @@ class NaiveBayesWordClassifier(object):
                 # updating frequency of words in each class
                 self.freq[sentiment]+=1
 
-    def classificador(self,document):
-        pass
+    def classificator(self, document):
+
+        # calculating the posteriori
+        probability_pos = float(self.qtdeDocument['1']) / float(self.totalDocuments)
+        probability_neg = float(self.qtdeDocument['0']) / float(self.totalDocuments)
+
+        return "1"
 
 
 
@@ -63,4 +70,3 @@ class NaiveBayesWordClassifier(object):
 
 
 
-        
