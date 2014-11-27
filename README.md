@@ -10,3 +10,6 @@ Read file like this tweet database: [http://thinknook.com/wp-content/uploads/201
 
 Using holdout with 30% for test then using ten fold cross validation
 
+```
+$ python humor-classifier.py
+```
