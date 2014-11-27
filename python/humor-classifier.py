@@ -1,93 +1,121 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os, time, sys
 import re
-import sys
 import random
 import NaiveBayesWordClassifier
 
 # holdout
-def separateTrainAndTestGroups(csvfile='Sentiment Analysis Dataset.csv', testSetPercentSize=0.3):
+def separateTrainAndTestGroupsUsingHoldout(csvfile='Sentiment Analysis Dataset.csv', testSetPercentSize=0.3):
+
+    # reading file
+    sourceFile = open(csvfile, 'r')
+    lines = sourceFile.readlines()
+
+    # removing first line
+    lines = lines[1:]
+
+    # sort randonly
+    random.shuffle(lines)
+
+    # calculating limit of lines in test file
+    testFileLimit = int(testSetPercentSize * len(lines))
+
+    testFile = open('testSetFile.csv', 'w')
+    trainFile = open('trainSetFile.csv', 'w')
     
-    try:
-        # open database file and sort it 'randomly'
-        with open(csvfile, 'r') as source:
-            data = [ (random.random(), line) for line in source ]
-        data.sort()
+    # populating each file
+    cont = 0
 
-        # getting the limit of lines inside trainning file
-        trainSetPercentSize = 1 - testSetPercentSize
-        trainSetLimitLines = trainSetPercentSize * len(data)
+    for line in lines:
+        if cont<testFileLimit:
+            testFile.write(line)
+        else:
+            trainFile.write(line)
+        cont+=1
 
-        # writting 2 files with trainSet and testSet based on limit lines on each
-        cont = 0
-        with open('trainSetFile.csv', 'w') as trainFile, open('testSetFile.csv', 'w') as testFile:
-            for _, line in data:
+    sourceFile.close()
+    testFile.close()
+    trainFile.close()
 
-                # bypassing file header
-                if 'ItemID,Sentiment,SentimentSource,SentimentText' not in line:
-                    if cont < trainSetLimitLines:
-                        trainFile.write(line)
-                    else:
-                        testFile.write(line)
-                    cont+=1
-                    
+    return True
 
-        # closing the resources
-        source.close()
-        trainFile.close()
-        testFile.close()
-        return True
 
-    except IOError as e:
-        source.close()
-        trainFile.close()
-        testFile.close()
-        print "I/O error({0}): {1}".format(e.errno, e.strerror)
-    except:
-        source.close()
-        trainFile.close()
-        testFile.close()
-        print "Unexpected error:", sys.exc_info()[0]
-        raise
+# crossvalidation
+def separateTrainAndTestGroupsUsingCrossvalidation(csvfile='Sentiment Analysis Dataset.csv', qtdeFolds=10):
+    
+    # reading file
+    sourceFile = open(csvfile, 'r')
+    lines = sourceFile.readlines()
+
+    # removing first line
+    lines = lines[1:]
+
+    # sort randonly
+    random.shuffle(lines)
+
+    # calculating limit of lines in each file
+    foldLimit = int(len(lines)/qtdeFolds)
+
+    # opening fold files
+    foldDictionary = {}
+    for fold in range(1, 1+qtdeFolds):
+        filename = 'crossvalidation-{}.csv'.format(fold)
+        foldDictionary[fold] = open(filename, 'w')
+
+    # populating each fold file
+    cont = 0
+    fold = 1
+    for line in lines:
+        foldDictionary[fold].write(line)
+        if cont<foldLimit:
+            cont+=1
+        else:
+            fold+=1
+            cont=0
+
+    # closing destination files
+    for fold in range(1, 1+qtdeFolds):
+        foldDictionary[fold].close()
+
+    # closing source file
+    sourceFile.close()
+
+    return True
 
 def readFileToLists(csvfile='trainSetFile.csv'):
 
-    try:
-        arq = open(csvfile, 'r')
-        documents = []
+    arq = open(csvfile, 'r')
+    documents = []
 
-        # ignoring first line due to header with label
-        txt = arq.readlines()[1:] 
+    # reading all lines
+    sourceFile = arq.readlines() 
 
-        for linha in txt :
-            
-            # get only 4 columns ignoring comas inside the tweet
-            lista = linha.split(',', 3)
-            document = lista[0]
-            text = lista[3].lower()
-
-            # removing 'trashy' characters with regex
-            text = re.sub(r'[^0-9a-z\ ]','', text)
-            sentiment = lista[1]
-            
-            documents.append([document, sentiment, text])
-
-        arq.close()
-        return documents
+    for line in sourceFile :
         
-    except IOError as e:
-        arq.close()
-        print "I/O error({0}): {1}".format(e.errno, e.strerror)
-    except:
-        arq.close()
-        print "Unexpected error:", sys.exc_info()[0]
-        raise
+        # get only 4 columns ignoring comas inside the tweet
+        columns = line.split(',', 3)
 
+        # get document number and tweet text in lower case
+        document = columns[0]
+        sentiment = columns[1]
+        text = columns[3].lower()
+
+        # removing 'trashy' characters with regex
+        text = re.sub(r'[^0-9a-z\ ]','', text)
+        
+        documents.append([document, sentiment, text])
+
+    # closing file
+    arq.close()
+
+    return documents
+    
 def main():
 
-    print "Embaralhando dados e separando em conjuntos de treinamento (trainSetFile.csv) e teste (testSetFile.csv)..."
-    separateTrainAndTestGroups("../Sentiment Analysis Dataset.csv", 0.3)
+    print "Embaralhando dados e separando em conjuntos de treinamento (30% trainSetFile.csv) e teste (70% testSetFile.csv)..."
+    separateTrainAndTestGroupsUsingHoldout("../Sentiment Analysis Dataset.csv", 0.3)
     print "Concluído"
     print ""
 
@@ -143,10 +171,16 @@ def main():
     print "Resultados do teste:"
     print "%s acertos em %s documentos" % (hits, len(listOfDocuments))
     print "%.2f %% de acertos" % (100 * float(hits)/float(len(listOfDocuments)))
-
     print ""
+
+    print "Embaralhando dados e separando em 10 conjuntos (crossvalidation-{1..10}.csv)"
+    separateTrainAndTestGroupsUsingCrossvalidation("../Sentiment Analysis Dataset.csv")
+    print "Concluído"
+    print ""
+
     print "Fim"
     print ""
 
 if __name__ == '__main__':
     main()
+
