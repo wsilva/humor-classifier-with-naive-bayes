@@ -16,15 +16,6 @@ class NaiveBayesWordClassifier(object):
 
         self.vocabulary = 0
 
-    def getDocsPos(self):
-        return self.qtdeDocument['1']
-
-    def getDocsNeg(self):
-        return self.qtdeDocument['0']
-
-    def getTotalDocs(self):
-        return self.totalDocuments
-
     def train(self, listOfDocuments):
         
         # listing documents 
