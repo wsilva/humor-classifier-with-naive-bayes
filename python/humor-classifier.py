@@ -112,7 +112,7 @@ def readFileToLists(csvfile='trainSetFile.csv'):
 
     return documents
 
-def holdoutFlow():
+def holdoutFlow(removeStopWords=False):
     print "Embaralhando dados e separando em conjuntos de treinamento (30% trainSetFile.csv) e teste (70% testSetFile.csv)..."
     separateTrainAndTestGroupsUsingHoldout("../Sentiment Analysis Dataset.csv", 0.3)
     print "Concluído"
@@ -125,7 +125,7 @@ def holdoutFlow():
 
     print "Criando e treinando o Naive Bayes com o arquivo de treinamento (testSetFile.csv)..."
     nb = NaiveBayesWordClassifier.NaiveBayesWordClassifier()
-    nb.train(listOfDocuments)
+    nb.train(listOfDocuments, removeStopWords)
     print "Concluído"
     print ""
 
@@ -153,26 +153,51 @@ def holdoutFlow():
 
     print "Testando cada documento do arquivo de teste e contabilizando acertos..."
     hits = 0 #contador de acertos
+    miss = 0 #contador de erros
+    posPos=0
+    posNeg=0
+    negPos=0
+    negNeg=0
+
     for doc in listOfDocuments:
 
         # attributes from the list
         document = doc[0]
         sentiment = doc[1]
         tweet = doc[2]
-        identifiedClass = nb.classificator(tweet)
+        identifiedClass = nb.classificator(tweet, removeStopWords)
         
         # counting the right hits
         if sentiment==identifiedClass:
             hits+=1
+            if sentiment=='1':
+                posPos+=1
+            else:
+                negNeg+=1
+        else:
+            miss+=1
+            if sentiment=='1':
+                posNeg+=1
+            else:
+                negPos+=1
+
     print "Concluído"
     print ""
 
     print "Resultados do teste:"
     print "%s acertos em %s documentos" % (hits, len(listOfDocuments))
     print "%.2f %% de acertos" % (100 * float(hits)/float(len(listOfDocuments)))
+    print "%.2f %% de erros" % (100 * float(miss)/float(len(listOfDocuments)))
+    print "+-----+---------+---------+"
+    print "|     |   POS   |   NEG   |"
+    print "+-----+---------+---------+"
+    print "| POS | %07d | %07d |" % (posPos, posNeg)
+    print "| NEG | %07d | %07d |" % (negPos, negNeg)
+    print "+-----+---------+---------+"
+
     print ""
 
-def crossvalidationFlow():
+def crossvalidationFlow(removeStopWords=False):
     qtdeFolds = 10
     print "Embaralhando dados e separando em %s conjuntos (crossvalidation-{1..%s}.csv)" % (qtdeFolds, qtdeFolds)
     separateTrainAndTestGroupsUsingCrossvalidation("../Sentiment Analysis Dataset.csv", qtdeFolds)
@@ -205,7 +230,7 @@ def crossvalidationFlow():
     for i in range(1,1+qtdeFolds):
         print "Treinamento número %s" % i
         nb = NaiveBayesWordClassifier.NaiveBayesWordClassifier()
-        nb.train(trainList[i])
+        nb.train(trainList[i], removeStopWords)
 
         hits = 0 #contador de acertos
         miss = 0 #contador de acertos
@@ -216,7 +241,7 @@ def crossvalidationFlow():
             document = doc[0]
             sentiment = doc[1]
             tweet = doc[2]
-            identifiedClass = nb.classificator(tweet)
+            identifiedClass = nb.classificator(tweet, removeStopWords)
             
             # counting the right hits
             if sentiment==identifiedClass:
@@ -232,7 +257,11 @@ def crossvalidationFlow():
     
 def main():
 
-    holdoutFlow()    
+    print "============= Holdout ============="
+    holdoutFlow() 
+
+    print "=== Holdout removendo stop words ==="
+    holdoutFlow(True)    
 
     # crossvalidationFlow()
 
