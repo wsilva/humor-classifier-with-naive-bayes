@@ -113,7 +113,8 @@ def readFileToLists(csvfile='trainSetFile.csv'):
     return documents
 
 def holdoutFlow(removeStopWords=False):
-    print "Embaralhando dados e separando em conjuntos de treinamento (30% trainSetFile.csv) e teste (70% testSetFile.csv)..."
+    trainSizePercent = 0.3
+    print "Embaralhando dados e separando em conjuntos de treinamento (%d%% trainSetFile.csv) e teste (%d%% testSetFile.csv)..." % ((100*trainSizePercent), (1-trainSizePercent)*100)
     separateTrainAndTestGroupsUsingHoldout("../Sentiment Analysis Dataset.csv", 0.3)
     print "Concluído"
     print ""
@@ -137,11 +138,11 @@ def holdoutFlow(removeStopWords=False):
     print "     n[pos] = %s" % (nb.freq['1'])
     print "     n[neg] = %s" % (nb.freq['0'])
     print "P(wi|ci) - Probabilidade condicional de cada palavra dada uma classe."
-    print "Limitando quantidade de exemplos em 5"
+    print "Limitando quantidade de exemplos em 2"
     cont=0
     for word, prob in nb.probability.iteritems():
         cont+=1
-        if cont < 6:
+        if cont < 3:
             print "    P(%s|pos) = %.10f" % (word, prob['1']) 
             print "    P(%s|neg) = %.10f" % (word, prob['0'])
     print ""
@@ -194,11 +195,10 @@ def holdoutFlow(removeStopWords=False):
     print "| POS | %07d | %07d |" % (posPos, posNeg)
     print "| NEG | %07d | %07d |" % (negPos, negNeg)
     print "+-----+---------+---------+"
-
     print ""
 
 def crossvalidationFlow(removeStopWords=False):
-    qtdeFolds = 10
+    qtdeFolds = 5
     print "Embaralhando dados e separando em %s conjuntos (crossvalidation-{1..%s}.csv)" % (qtdeFolds, qtdeFolds)
     separateTrainAndTestGroupsUsingCrossvalidation("../Sentiment Analysis Dataset.csv", qtdeFolds)
     print "Concluído"
@@ -208,19 +208,19 @@ def crossvalidationFlow(removeStopWords=False):
     trainList={}
     testList={}
     for j in range(1, 1+qtdeFolds):
-        print "Rodada %s do crossvalidation" % j
+        print "   Rodada %s do crossvalidation" % j
         for i in range(1, 1+qtdeFolds):
             filename = 'crossvalidation-{}.csv'.format(i)
             tmpList = readFileToLists(filename)
             if i==j:
                 testList[j] = tmpList
-                print "Arquivo %s separado para teste" % filename
+                print "   Arquivo %s separado para teste" % filename
             else:
                 if j in trainList:
                     trainList[j] = itertools.chain(trainList[j], tmpList)
                 else:
                     trainList[j] = tmpList
-                print "Arquivo %s separado para treino" % filename
+                # print "Arquivo %s separado para treino" % filename
     print "Concluído"
     print ""
 
@@ -228,13 +228,13 @@ def crossvalidationFlow(removeStopWords=False):
     hitsList=[]
     missList=[]
     for i in range(1,1+qtdeFolds):
-        print "Treinamento número %s" % i
+        print "   Treinamento número %s" % i
         nb = NaiveBayesWordClassifier.NaiveBayesWordClassifier()
         nb.train(trainList[i], removeStopWords)
 
         hits = 0 #contador de acertos
         miss = 0 #contador de acertos
-        print "Teste número %s" % i
+        print "   Teste número %s" % i
         for doc in testList[i]:
 
             # attributes from the list
@@ -249,21 +249,45 @@ def crossvalidationFlow(removeStopWords=False):
             else:
                 miss+=1
         
-        missList.append(100 * float(miss)/float(len(testList[i])))
-        hitsList.append(100 * float(hits)/float(len(testList[i])))
+        hitsPercent = 100 * float(hits)/float(len(testList[i]))
+        missPercent = 100 * float(miss)/float(len(testList[i]))
+        print "   Acuracia: %.2f %%" % hitsPercent
+        print "   Erro: %.2f %%" % missPercent
 
-    print "Média de acertos: %.2f %%" % (sum(hitsList) / float(len(hitsList)))
-    print "Média de erros: %.2f %%" % (sum(missList) / float(len(missList)))
+        hitsList.append(hitsPercent)
+        missList.append(missPercent)
+
+        avgHits = sum(hitsList) / float(len(hitsList))
+        avgMiss = sum(missList) / float(len(missList))
+
+        summary = 0
+        for i in hitsList:
+            summary = summary + ((i-avgHits)*(i-avgHits))
+        desvioPadraoHits = math.sqrt(summary / (len(hitsList) - 1))
+
+        summary = 0
+        for i in missList:
+            summary = summary + ((i-avgMiss)*(i-avgMiss))
+        desvioPadraoMiss = math.sqrt(summary / (len(missList) - 1))
+
+
+    print "Média de acertos: %.2f %% com desvio padrão de %.2f" % (avgHits, desvioPadraoHits)
+    print "Média de erros: %.2f %% com desvio padrão de %.2f" % (avgMiss, desvioPadraoMiss)
+    print ""
     
 def main():
 
-    print "============= Holdout ============="
+    print "================= Holdout =================="
     holdoutFlow() 
 
-    print "=== Holdout removendo stop words ==="
+    print "======= Holdout removendo stop words ======="
     holdoutFlow(True)    
 
-    # crossvalidationFlow()
+    print "============= Cross Validation =============="
+    crossvalidationFlow()
+
+    print "=== Cross Validation removendo stop words ==="
+    crossvalidationFlow(True)
 
     print "Concluído"
     print ""
