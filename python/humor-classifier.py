@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, time, sys, itertools
+import os, time, sys, itertools, math
 import re
 import random
 import NaiveBayesWordClassifier
@@ -198,7 +198,7 @@ def holdoutFlow(removeStopWords=False):
     print ""
 
 def crossvalidationFlow(removeStopWords=False):
-    qtdeFolds = 5
+    qtdeFolds = 10
     print "Embaralhando dados e separando em %s conjuntos (crossvalidation-{1..%s}.csv)" % (qtdeFolds, qtdeFolds)
     separateTrainAndTestGroupsUsingCrossvalidation("../Sentiment Analysis Dataset.csv", qtdeFolds)
     print "Concluído"
@@ -263,12 +263,12 @@ def crossvalidationFlow(removeStopWords=False):
         summary = 0
         for i in hitsList:
             summary = summary + ((i-avgHits)*(i-avgHits))
-        desvioPadraoHits = math.sqrt(summary / (len(hitsList) - 1))
+        desvioPadraoHits = math.sqrt(summary / float(len(hitsList)))
 
         summary = 0
         for i in missList:
             summary = summary + ((i-avgMiss)*(i-avgMiss))
-        desvioPadraoMiss = math.sqrt(summary / (len(missList) - 1))
+        desvioPadraoMiss = math.sqrt(summary / float(len(missList)))
 
 
     print "Média de acertos: %.2f %% com desvio padrão de %.2f" % (avgHits, desvioPadraoHits)
@@ -298,3 +298,4 @@ def main():
 if __name__ == '__main__':
     main()
 
+# 
